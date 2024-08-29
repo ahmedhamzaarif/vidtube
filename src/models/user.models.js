@@ -51,7 +51,7 @@ const userSchema = new Schema({
 userSchema.pre("save", async function (next) {
     if(!this.isModified("password")) return next()
 
-    this.password = bcrypt.hash(this.password, 10)
+    this.password = await bcrypt.hash(this.password, 10)
     next()
 })
 
@@ -60,7 +60,7 @@ userSchema.methods.isPasswordCorrect = async function (password) {
 }
 
 userSchema.methods.generateAccessToken = async function () {
-    // short live access token
+    // short live access token - max 1 day
     return jwt.sign({
         _id: this._id, // usually only id is stored
         email: this.email,
@@ -70,7 +70,7 @@ userSchema.methods.generateAccessToken = async function () {
 }
 
 userSchema.methods.generateRefreshToken = async function () {
-    // short live access token
+    // 1 day - 1 month
     return jwt.sign({
         _id: this._id, // paylaod for refresh_token always contain only one information (i.e. id)
     }, process.env.REFRESH_TOKEN_SECRET, {expiresIn: process.env.REFRESH_TOKEN_EXPIRY})
