@@ -61,3 +61,9 @@ npm i bcrypt jsonwebtoken
 <!-- File Handling -->
 npm i cookie-parser multer cloudinary
 ```
+
+status codes like: 
+- 201 Created to indicate a resource was successfully created.
+- 204 No Content for the delete API since no content is returned in the body.
+- 400 for client-side validation errors 
+- 500 for server-side issues.

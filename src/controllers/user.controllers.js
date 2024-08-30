@@ -254,7 +254,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     throw new ApiError(400, "oldPassword & newPassword are required");
   }
 
-  const isLengthValid = String(newPassword).length >= 8
+  const isLengthValid = String(newPassword).length >= 8;
 
   if (!isLengthValid) {
     throw new ApiError(401, "newPassword must have 8 characters");
@@ -306,7 +306,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 
 const updateUserAvatar = asyncHandler(async (req, res) => {
   const avatarLocalPath = req.file?.path;
-  const prevAvatar = req.user.avatar.split('/').at(-1).split('.')[0]
+  const prevAvatar = req.user.avatar.split("/").at(-1).split(".")[0];
 
   if (!avatarLocalPath) {
     throw new ApiError(400, "File is required");
@@ -337,7 +337,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 
 const updateUserCoverImage = asyncHandler(async (req, res) => {
   const coverImageLocalPath = req.file?.path;
-  const prevCoverImage = req.user.coverImage.split('/').at(-1).split('.')[0]
+  const prevCoverImage = req.user.coverImage.split("/").at(-1).split(".")[0];
 
   if (!coverImageLocalPath) {
     throw new ApiError(400, "File is required");
@@ -490,7 +490,11 @@ const getWatchHistory = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(
-      new ApiResponse(200, user[0]?.watchHistory, "Watch history fetched successfully")
+      new ApiResponse(
+        200,
+        user[0]?.watchHistory,
+        "Watch history fetched successfully"
+      )
     );
 });
 
