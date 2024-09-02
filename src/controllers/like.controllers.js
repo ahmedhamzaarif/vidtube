@@ -1,16 +1,16 @@
 import mongoose from "mongoose";
 import { Like } from "../models/like.models.js";
+import { Video } from "../models/video.models.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { validateObjectId } from "../utils/validateObjectId.js";
 
 const toggleCommentLike = asyncHandler(async (req, res) => {
   const { commentId } = req.params;
   const userId = req.user._id.toString();
 
-  if (!mongoose.Types.ObjectId.isValid(commentId)) {
-    throw new ApiError(400, "Invalid Comment ID");
-  }
+  validateObjectId(commentId, "Comment");
 
   const existingLike = await Like.findOne({
     comment: commentId,
@@ -35,13 +35,10 @@ const toggleCommentLike = asyncHandler(async (req, res) => {
 });
 
 const toggleTweetLike = asyncHandler(async (req, res) => {
-  //TODO: toggle like on comment
   const { tweetId } = req.params;
   const userId = req.user._id.toString();
 
-  if (!mongoose.Types.ObjectId.isValid(tweetId)) {
-    throw new ApiError(400, "Invalid Tweet ID");
-  }
+  validateObjectId(tweetId, "Tweet");
 
   const existingLike = await Like.findOne({
     tweet: tweetId,
@@ -66,13 +63,10 @@ const toggleTweetLike = asyncHandler(async (req, res) => {
 });
 
 const toggleVideoLike = asyncHandler(async (req, res) => {
-  //TODO: toggle like on tweet
   const { videoId } = req.params;
   const userId = req.user._id.toString();
 
-  if (!mongoose.Types.ObjectId.isValid(videoId)) {
-    throw new ApiError(400, "Invalid Video ID");
-  }
+  validateObjectId(videoId, "Video");
 
   const existingLike = await Like.findOne({
     video: videoId,
@@ -117,6 +111,12 @@ const getLikedVideos = asyncHandler(async (req, res) => {
     {
       $unwind: "$likedVideos",
     },
+    // {
+    //   $project: {
+    //     _id: 0,
+    //     likedVideos: 1,
+    //   }
+    // }
     {
       $replaceRoot: {
         newRoot: "$likedVideos",

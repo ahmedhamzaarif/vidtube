@@ -3,6 +3,7 @@ import { Comment } from "../models/comment.models.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { validateObjectId } from "../utils/validateObjectId.js";
 
 const getVideoComments = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
@@ -12,10 +13,7 @@ const getVideoComments = asyncHandler(async (req, res) => {
   page = parseInt(page, 10);
   limit = parseInt(limit, 10);
 
-  // Validate videoId is a valid ObjectId
-  if (!mongoose.Types.ObjectId.isValid(videoId)) {
-    throw new ApiError(400, "Invalid Video ID");
-  }
+  validateObjectId(videoId, "Video");
 
   const offset = page * limit - limit;
 
@@ -45,9 +43,7 @@ const addComment = asyncHandler(async (req, res) => {
     throw new ApiError(400, "content is required");
   }
 
-  if (!mongoose.Types.ObjectId.isValid(videoId)) {
-    throw new ApiError(400, "Invalid Video ID");
-  }
+  validateObjectId(videoId, "Video");
 
   const comment = await Comment.create({
     content,
@@ -65,9 +61,7 @@ const updateComment = asyncHandler(async (req, res) => {
   const { content } = req.body;
   const { _id: userId } = req.user;
 
-  if (!mongoose.Types.ObjectId.isValid(commentId)) {
-    throw new ApiError(400, "Invalid Comment ID");
-  }
+  validateObjectId(commentId, "Comment");
 
   const comment = await Comment.findById(commentId);
 
@@ -85,16 +79,14 @@ const updateComment = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, comment , "Comment updated successfully"));
+    .json(new ApiResponse(200, comment, "Comment updated successfully"));
 });
 
 const deleteComment = asyncHandler(async (req, res) => {
   const { commentId } = req.params;
   const { _id: userId } = req.user;
 
-  if (!mongoose.Types.ObjectId.isValid(commentId)) {
-    throw new ApiError(400, "Invalid Comment ID");
-  }
+  validateObjectId(commentId, "Comment");
 
   const comment = await Comment.findById(commentId);
 

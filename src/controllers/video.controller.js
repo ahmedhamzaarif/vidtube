@@ -7,6 +7,8 @@ import {
   deleteFromCloudinary,
   uploadOnCloudinary,
 } from "../utils/cloudinary.js";
+import { validateObjectId } from "../utils/validateObjectId.js";
+import { checkOwnership } from "../utils/checkOwnership.js";
 
 const getAllVideos = asyncHandler(async (req, res) => {
   const {
@@ -116,10 +118,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
 const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
 
-  // Validate videoId format
-  if (!mongoose.Types.ObjectId.isValid(videoId)) {
-    throw new ApiError(400, "Invalid video ID");
-  }
+  validateObjectId(videoId, "Video");
 
   try {
     const video = await Video.findById(videoId);
@@ -138,6 +137,7 @@ const getVideoById = asyncHandler(async (req, res) => {
 
 const updateVideo = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
+  validateObjectId(videoId, "Video");
 
   const { title, description } = req.body;
 
@@ -145,20 +145,14 @@ const updateVideo = asyncHandler(async (req, res) => {
     throw new ApiError(404, "All fields are required");
   }
 
-  const video = await Video.findByIdAndUpdate(
-    videoId,
-    {
-      $set: {
-        title,
-        description,
-      },
-    },
-    { new: true }
-  );
-
+  const video = await Video.findById(videoId);
   if (!video) {
-    throw new ApiError(500, "Something went wrong while updating video");
+    throw new ApiError(404, "Video not found");
   }
+
+  video.title = title;
+  video.description = description;
+  video.save();
 
   return res
     .status(200)
@@ -166,16 +160,22 @@ const updateVideo = asyncHandler(async (req, res) => {
 });
 
 const deleteVideo = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
   const { videoId } = req.params;
 
-  try {
-    await Video.findByIdAndDelete(videoId);
-    return res
-      .status(200)
-      .json(new ApiResponse(200, {}, "Video deleted successfully"));
-  } catch (error) {
-    throw new ApiError(404, "Something went wrong while deleting video");
+  const video = await Video.findById(videoId);
+
+  if (!video) {
+    throw new ApiError(404, "Video not found");
   }
+
+  checkOwnership(video.owner, userId);
+
+  await video.deleteOne({ _id: videoId });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Video deleted successfully"));
 });
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
@@ -186,32 +186,18 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Published field is required");
   }
 
-  if (!mongoose.Types.ObjectId.isValid(videoId)) {
-    throw new ApiError(400, "Invalid video ID");
+  validateObjectId(videoId, "Video");
+
+  const video = await Video.findById(videoId);
+
+  if (!video) {
+    throw new ApiError(404, "Video not found");
   }
+  (video.isPublished = published), video.save();
 
-  try {
-    const video = await Video.findByIdAndUpdate(
-      videoId,
-      {
-        $set: {
-          isPublished: published,
-        },
-      },
-      { new: true }
-    ).select("isPublished title");
-
-    if (!video) {
-      throw new ApiError(404, "Video not found");
-    }
-
-    return res
-      .status(200)
-      .json(new ApiResponse(200, video, "Video status updated successfully"));
-  } catch (error) {
-    console.log("Error updating video status", error);
-    throw new ApiError(500, "Something went wrong while updating video status");
-  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, video, "Video status updated successfully"));
 });
 
 export {
