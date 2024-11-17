@@ -1,7 +1,10 @@
 {
   "version": 2,
-  "rewrites": [{ 
-    "source": "/(.*)", 
-    "destination": "/src"
-  }] 
+  "name": "VidTube-Backend",
+  "builds": [
+     { "src": "src/index.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+     { "src": "/(.*)", "dest": "src/index.js" } 
+  ]
 }
